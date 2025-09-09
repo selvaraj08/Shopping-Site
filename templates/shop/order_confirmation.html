@@ -1,0 +1,315 @@
+{% extends 'shop/layouts/main.html' %}
+{% load static %}
+{% block title %}
+Order Confirmation | Zepto
+{% endblock title %}
+
+{% block content %}
+<section class="bg-light py-4 my-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Success Message -->
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <div class="mb-4">
+                            <i class="fa fa-check-circle text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h2 class="text-success mb-3">Order Placed Successfully!</h2>
+                        <p class="text-muted mb-4">Thank you for your order. Your order has been confirmed and will be processed shortly.</p>
+
+                        {% if order %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 mb-3">
+                                    <h6 class="text-primary mb-2"><i class="fa fa-hashtag"></i> Order ID</h6>
+                                    <p class="mb-0 font-weight-bold">#{{ order.id }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 mb-3">
+                                    <h6 class="text-primary mb-2"><i class="fa fa-truck"></i> Tracking Number</h6>
+                                    <p class="mb-0 font-weight-bold">{{ order.tracking_no }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if order %}
+                <!-- Order Details -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fa fa-shopping-bag"></i> Order Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6>Order Date:</h6>
+                                <p>{{ order.created_at|date:"F j, Y, g:i a" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Payment Method:</h6>
+                                <p>
+                                    {% if order.payment_mode == 'COD' %}
+                                        <i class="fa fa-money text-success"></i> Cash on Delivery
+                                    {% elif order.payment_mode == 'GPay' %}
+                                        <i class="fa fa-mobile text-primary"></i> Google Pay
+                                    {% elif order.payment_mode == 'PhonePe' %}
+                                        <i class="fa fa-mobile text-warning"></i> PhonePe
+                                    {% else %}
+                                        {{ order.payment_mode }}
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Order Items -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order_items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ item.product.product_image.url }}" alt="{{ item.product.name }}"
+                                                     class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                <div>
+                                                    <h6 class="mb-0">{{ item.product.name }}</h6>
+                                                    <small class="text-muted">{{ item.product.vendor }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>Rs. {{ item.price }}</td>
+                                        <td>Rs. {{ item.total }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <th colspan="3" class="text-end">Total Amount:</th>
+                                        <th>Rs. {{ order.total_price }}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fa fa-map-marker"></i> Shipping Address</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>{{ order.fname }} {{ order.lname }}</h6>
+                                <p class="mb-1">{{ order.address }}</p>
+                                <p class="mb-1">{{ order.city }}, {{ order.state }} {{ order.pincode }}</p>
+                                <p class="mb-1">{{ order.country }}</p>
+                                <p class="mb-0"><i class="fa fa-phone"></i> {{ order.phone }}</p>
+                                <p class="mb-0"><i class="fa fa-envelope"></i> {{ order.email }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <h6><i class="fa fa-info-circle"></i> Delivery Information</h6>
+                                    <p class="mb-0">Your order will be delivered within 3-5 business days.</p>
+                                    <p class="mb-0">You will receive an email confirmation with tracking details.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Status -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fa fa-clock"></i> Order Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="progress mb-3">
+                                    {% if order.status == 'Pending' %}
+                                        <div class="progress-bar bg-warning" style="width: 25%"></div>
+                                    {% elif order.status == 'Out For Shipping' %}
+                                        <div class="progress-bar bg-info" style="width: 50%"></div>
+                                    {% elif order.status == 'Completed' %}
+                                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">Order Placed</small>
+                                    <small class="text-muted">Processing</small>
+                                    <small class="text-muted">Shipped</small>
+                                    <small class="text-muted">Delivered</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="p-3 border rounded">
+                                    <h6 class="text-primary mb-1">Current Status</h6>
+                                    <span class="badge
+                                        {% if order.status == 'Pending' %}bg-warning
+                                        {% elif order.status == 'Out For Shipping' %}bg-info
+                                        {% elif order.status == 'Completed' %}bg-success
+                                        {% endif %}">
+                                        {{ order.status }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fa fa-star"></i> {% if feedback_submitted %}Your Feedback{% else %}Share Your Feedback{% endif %}</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if feedback_submitted %}
+                            <div class="text-center">
+                                <div class="mb-3">
+                                    <i class="fa fa-check-circle text-success" style="font-size: 3rem;"></i>
+                                </div>
+                                <h5 class="text-success mb-3">Thank you for your feedback!</h5>
+                                <p class="text-muted">Your input helps us improve our service.</p>
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-3">Your feedback helps us improve our service. Please rate your experience and share any comments.</p>
+
+                            <form method="post" action="{% url 'order_confirmation' order.id %}">
+                                {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Rate your experience:</label>
+                                            {{ feedback_form.rating.errors }}
+                                            <div class="rating-options">
+                                                {{ feedback_form.rating }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Comments (optional):</label>
+                                            {{ feedback_form.comment.errors }}
+                                            {{ feedback_form.comment }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fa fa-paper-plane"></i> Submit Feedback
+                                    </button>
+                                </div>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card">
+                    <div class="card-body text-center">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <a href="{% url 'home' %}" class="btn btn-primary btn-lg w-100">
+                                    <i class="fa fa-home"></i> Continue Shopping
+                                </a>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <button class="btn btn-outline-primary btn-lg w-100" onclick="window.print()">
+                                    <i class="fa fa-print"></i> Print Receipt
+                                </button>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <a href="#" class="btn btn-outline-secondary btn-lg w-100" onclick="trackOrder()">
+                                    <i class="fa fa-truck"></i> Track Order
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function trackOrder() {
+    // Get tracking number from the page
+    const trackingElement = document.querySelector('.font-weight-bold');
+    if (trackingElement && trackingElement.textContent) {
+        const trackingNo = trackingElement.textContent.trim();
+        alert('Tracking Number: ' + trackingNo + '\n\nYou can track your order status in your account dashboard.');
+    } else {
+        alert('Order information not available.');
+    }
+}
+
+// Auto-print functionality (optional)
+document.addEventListener('DOMContentLoaded', function() {
+    // Uncomment the line below if you want automatic printing
+    // window.print();
+});
+</script>
+
+<style>
+.rating-options input[type="radio"] {
+    display: none;
+}
+
+.rating-options label {
+    display: inline-block;
+    padding: 8px 16px;
+    margin: 4px;
+    border: 2px solid #ddd;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #666;
+}
+
+.rating-options input[type="radio"]:checked + label {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.rating-options label:hover {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.rating-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+@media print {
+    .btn, .card-header, .alert {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock content %}

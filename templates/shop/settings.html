@@ -1,0 +1,31 @@
+{% extends 'shop/layouts/main.html' %}
+{% block title %}
+Settings - Zepto
+{% endblock title %}
+
+{% block content %}
+<div class="container" style="margin-top:80px;">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Settings</h2>
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" action="{% url 'settings' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                        </div>
+                        <!-- Add more fields as needed -->
+                        <button type="submit" class="btn btn-primary">Update Settings</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

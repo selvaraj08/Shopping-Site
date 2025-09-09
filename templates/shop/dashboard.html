@@ -1,0 +1,47 @@
+{% extends 'shop/layouts/main.html' %}
+{% load static %}
+{% block title %}
+User Dashboard - Zepto
+{% endblock title %}
+
+{% block content %}
+<div class="container" style="margin-top: 80px;">
+  <div class="row">
+    <div class="col-md-3">
+      <ul class="nav flex-column nav-pills" id="dashboardTabs" role="tablist" aria-orientation="vertical">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="account-tab" data-bs-toggle="pill" data-bs-target="#account" type="button" role="tab" aria-controls="account" aria-selected="true">Account</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" href="{% url 'settings' %}">Settings</a>
+        </li>
+        <li class="nav-item" role="presentation">
+          <a class="nav-link" href="{% url 'about' %}">About Us</a>
+        </li>
+      </ul>
+    </div>
+    <div class="col-md-9">
+      <div class="tab-content" id="dashboardTabsContent">
+        <div class="tab-pane fade show active" id="account" role="tabpanel" aria-labelledby="account-tab">
+          <h3>Account Information</h3>
+          <p><strong>Username:</strong> {{ user.username }}</p>
+          <p><strong>Email:</strong> {{ user.email }}</p>
+          <h4>Your Orders</h4>
+          {% if orders %}
+            <ul class="list-group">
+              {% for order in orders %}
+                <li class="list-group-item">
+                  Order #{{ order.id }} - {{ order.status }} - Total: {{ order.total_price }}
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>You have no orders.</p>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

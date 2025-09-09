@@ -1,0 +1,169 @@
+{% extends 'shop/layouts/main.html' %}
+{% block titel %}
+ zepto | online shopping
+{% endblock titel %}
+
+{% block content %}
+{% csrf_token %}
+<section class="bg-light py-4 my-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h4 class="nb-3">{{category_name}} products</h4>
+                <hr style="border-color:#b8bfc2;">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'home'%}">Home</a></li>
+                    <li class="breadcrumb-item active">{{category_name}} Collections</li>
+                    </ol>                
+                </nav>
+                {% include 'shop/inc/message.html' %}
+                </div>
+                {% for item in products %}
+                <div class="col-md-4 col-lg-3">
+                    <div class="card my-3">
+                        <img src="{{item.product_image.url}}" class="card-img-top" alt="categories" style="height: 200px; object-fit: cover;">
+                        <a href="{% url 'product_details' category_name item.name %}" class="text-decoration-none">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">{{item.name}}</h5>
+                                <p class="card-text">
+                                <span class="float-start old_price"><s>Rs.{{ item.original_price }}</s></span>
+                                <span class="float-end new_price">Rs.{{item.selling_price}}</span>
+                                </p>
+                                {% if item.quantity > 0 %}
+                                <button class="btn btn-primary btn-sm add-to-cart-btn" data-pid="{{item.id}}" data-qty="1"> <i class="fa fa-shopping-cart"></i>Add to Cart</button>
+                                <button class="btn btn-success btn-sm buy-now-btn" data-pid="{{item.id}}" data-qty="1"> <i class="fa fa-credit-card"></i>Buy Now</button>
+                                <button class="btn btn-danger btn-sm fav-btn" data-pid="{{item.id}}"><i class="fa fa-heart"></i></button>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function(event) {
+    const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+    const buyNowButtons = document.querySelectorAll('.buy-now-btn');
+
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const pid = this.getAttribute('data-pid');
+            const qty = this.getAttribute('data-qty');
+
+            const postobj = {
+                'product_qty': qty,
+                'pid': pid
+            };
+
+            fetch("/addtocart", {
+                method: 'POST',
+                credentials: "same-origin",
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(postobj)
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                alert(data['status']);
+                if (data['redirect']) {
+                    window.location.href = data['redirect'];
+                } else if (data['status'] === 'Login to Add Cart') {
+                    window.location.href = '/login';
+                }
+            }).catch(error => {
+                alert('An error occurred while adding to cart.');
+            });
+        });
+    });
+
+    buyNowButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const pid = this.getAttribute('data-pid');
+            const qty = this.getAttribute('data-qty');
+
+            const postobj = {
+                'product_qty': qty,
+                'pid': pid
+            };
+
+            console.log('Buy Now request:', postobj);
+            fetch("/buynow", {
+                method: 'POST',
+                credentials: "same-origin",
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(postobj)
+            }).then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            }).then(data => {
+                console.log('Response data:', data);
+                alert(data['status']);
+                if (data['redirect']) {
+                    console.log('Redirecting to:', data['redirect']);
+                    window.location.href = data['redirect'];
+                } else if (data['status'] === 'Login to Buy Now') {
+                    window.location.href = '/login';
+                }
+            }).catch(error => {
+                console.error('Buy Now error:', error);
+                alert('An error occurred while processing your request.');
+            });
+        });
+    });
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(event) {
+    const favButtons = document.querySelectorAll('.fav-btn');
+
+    favButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const pid = this.getAttribute('data-pid');
+
+            const postobj = {
+                'pid': pid
+            };
+
+            fetch("/fav", {
+                method: 'POST',
+                credentials: "same-origin",
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(postobj)
+            }).then(response => {
+                return response.json();
+            }).then(data => {
+                alert(data['status']);
+                if (data['status'] === 'Login to Add Favourite') {
+                    window.location.href = '/login';
+                }
+            }).catch(error => {
+                alert('An error occurred while adding to favourites.');
+            });
+        });
+    });
+});
+</script>
+{% endblock scripts %}
+
+
+
+      
+    

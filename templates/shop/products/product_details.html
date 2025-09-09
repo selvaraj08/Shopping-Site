@@ -1,0 +1,204 @@
+{% extends 'shop/layouts/main.html' %}
+{% load static %}
+{% block title %}
+ {{ products.category.name }} Products | zepto
+{% endblock title %}
+
+{% block content %}
+{% csrf_token %}
+ <section class ="bg-light py-4 my-5" style="min-height:600px;">
+ <div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-3">{{products}} Details </h4>
+            <hr style="border-color: aquamarine;">
+    <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+     <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+     <li class="breadcrumb-item"><a href="{% url 'collectionsview' products.category.name %}">Collections</a></li>
+     <li class="breadcrumb-item active" aria-current="page">{{products}}</li>
+    </ol>
+    </nav>
+        {% include 'shop/inc/message.html' %}
+
+        <div class="col-md-4 my-3 pic-box">
+                {% if products.trending %}
+                <div class="hot">Hot</div>
+                {% endif %}
+               <img src="{{products.product_image.url}}" class="card-img-top" alt="{{products.name}}" style="height: 400px; object-fit: cover;">
+            </div>
+        <div class="col-8 my-3">
+            <h5 class="text-success"> {{products | upper}}</h5>
+            <p> {{products.vendor}}</p>
+            <p>{{products.description}}</p>
+            <h6 class="my-2 text-danger">Current Price : Rs.<s>{{products.original_price}}</s></h6>
+            <h5 class="my-2 text-primary">Offer Price : Rs.{{products.selling_price}}</h5>
+            <div class="my-3">
+                {% if products.quantity > 0 %}
+                <input type="hidden" value="{{products.id}}" id="pid">
+
+                 <p>
+                  <div class="input-group" style="width:150px">
+                     <button class="input-group-text bg-success text-light" id="btnMinus">-</button>
+                     <input type="text" name="qty" id="txtQty" value="1" class="form-control text-center">
+                     <button class="input-group-text bg-success text-light" id="btnPlus">+</button>
+                  </div>
+                 </p>
+                <button class="btn btn-primary" id="btnCart"> <i class="fa fa-shopping-cart"></i>Add to Cart</button>
+                <button class="btn btn-success" id="btnBuyNow"> <i class="fa fa-credit-card"></i>Buy Now</button>
+                {% else %}
+                <button class="btn btn-secondary"> <i class="fa fa-minus"></i>Out of Stock</button>
+                {% endif %}
+                <button class="btn btn-danger" id="btnfav"><i class="fa fa-heart"></i></button>
+             </div>
+        </div>
+     </div>
+  </div>
+  </section>
+  <script>
+document.addEventListener("DOMContentLoaded",function(event) {
+      const btnPlus = document.getElementById("btnPlus");
+      const btnMinus = document.getElementById("btnMinus");
+      const txtQty = document.getElementById("txtQty");
+      const pid = document.getElementById("pid");
+      const btnCart=document.getElementById("btnCart")
+      const btnBuyNow=document.getElementById("btnBuyNow")
+      const btnFav=document.getElementById("btnfav")
+
+
+
+      btnPlus.addEventListener("click", function() {
+         let qty = parseInt(txtQty.value, 10);
+         qty = isNaN(qty) ? 0 : qty;
+         if (qty < 10) {
+            qty++;
+            txtQty.value = qty;
+         }
+
+        });
+
+
+       btnMinus.addEventListener("click", function() {
+         let qty = parseInt(txtQty.value, 10);
+         qty = isNaN(qty) ? 0 : qty;
+         if (qty > 1) {
+            qty--;
+            txtQty.value = qty;
+         }
+
+    });
+    btnCart.addEventListener("click", function() {
+         let qty = parseInt(txtQty.value, 10);
+         qty = isNaN(qty) ? 0 : qty;
+
+         if (qty > 0) {
+           let postobj ={
+               'product_qty':qty,
+               'pid':pid.value
+
+           }
+           //console.log(postobj);
+           fetch("/addtocart",{
+            method:'POST',
+            credentials:"same-origin",
+            headers:{
+               'Accept':'application/json',
+               'X-Requested-With':'XMLHttpRequest',
+               'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(postobj)
+         }).then(response => {
+            return response.json();
+         }).then(data =>{
+            //console.log(data);
+            alert(data['status']);
+            if (data['redirect']) {
+                window.location.href = data['redirect'];
+            } else if (data['status'] === 'Login to Add Cart') {
+                window.location.href = '/login';
+            }
+         }).catch(error => {
+            console.error('Add to Cart error:', error);
+            alert('An error occurred while processing your request.');
+         });
+
+         }else{
+            alert("Please Enter The Quantity");
+         }
+    });
+
+    btnBuyNow.addEventListener("click", function() {
+         let qty = parseInt(txtQty.value, 10);
+         qty = isNaN(qty) ? 0 : qty;
+
+         if (qty > 0) {
+           let postobj ={
+               'product_qty':qty,
+               'pid':pid.value
+
+           }
+           console.log('Buy Now request:', postobj);
+           fetch("/buynow",{
+            method:'POST',
+            credentials:"same-origin",
+            headers:{
+               'Accept':'application/json',
+               'X-Requested-With':'XMLHttpRequest',
+               'X-CSRFToken': document.querySelector('input[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(postobj)
+         }).then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+         }).then(data =>{
+            console.log('Response data:', data);
+            alert(data['status']);
+            if (data['redirect']) {
+                console.log('Redirecting to:', data['redirect']);
+                window.location.href = data['redirect'];
+            } else if (data['status'] === 'Login to Buy Now') {
+                window.location.href = '/login';
+            }
+         }).catch(error => {
+            console.error('Buy Now error:', error);
+            alert('An error occurred while processing your request.');
+         });
+
+         }else{
+            alert("Please Enter The Quantity");
+         }
+    });
+
+
+    btnFav.addEventListener("click", function() {
+
+           let postobj ={
+
+               'pid':pid.value
+
+           }
+           //console.log(postobj);
+           fetch("/fav",{
+            method:'POST',
+            credentials:"same-origin",
+            headers:{
+               'Accept':'application/json',
+               'X-Requested-With':'XMLHttpRequest',
+               'X-CSRFToken': document.querySelector('input[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(postobj)
+         }).then(response => {
+            return response.json();
+         }).then(data =>{
+            //console.log(data);
+            alert(data['status']);
+            if (data['status'] === 'Login to Add Favourite') {
+                window.location.href = '/login';
+            }
+         });
+
+
+         });
+    });
+</script>
+{% endblock content %}
